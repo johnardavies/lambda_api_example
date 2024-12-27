@@ -1,0 +1,127 @@
+
+Description: A CloudFormation template that creates an API that runs a container. The API is rate limited API with an API key. 
+
+Parameters:
+  ECRRepositoryUri:
+    Type: String
+    Description: The URI of the Docker image in Amazon ECR (e.g., <account-id>.dkr.ecr.<region>.amazonaws.com/<repository-name>:<tag>).
+
+  StageName:
+    Type: String
+    Description: Name of API stage.
+
+Resources:
+  
+  # API Gateway
+  ApiGateway:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Name: 'ApiExample'
+      ApiKeySourceType: HEADER
+
+  # API Resource
+  ApiResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: 'installer'
+      RestApiId: !Ref ApiGateway
+
+  ExampleAPIDependencies: 
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: 'ExampleAPIDependencies'
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ImageUri: !Ref ECRRepositoryUri
+      PackageType: "Image"
+      Architectures: 
+        - 'arm64'
+      Timeout: 30
+      MemorySize: 500
+
+  # Gives the API Gateway permission to call the lambda function ExampleAPIDependencies
+  LambdaApiGatewayPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref ExampleAPIDependencies
+      Principal: 'apigateway.amazonaws.com'
+
+  # Lambda Execution Role
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'lambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: 'LambdaBasicExecution'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+    
+
+  # API Method
+  ApiMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      HttpMethod: 'GET'
+      ResourceId: !Ref ApiResource
+      RestApiId: !Ref ApiGateway
+      AuthorizationType: 'NONE'
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: 'POST'
+        Uri: !Sub 'arn:aws:apigateway:eu-west-2:lambda:path/2015-03-31/functions/${ExampleAPIDependencies.Arn}/invocations'
+
+
+  ApiDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    DependsOn: ApiMethod  # Ensures the deployment happens after the method is created
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: 'prod'
+
+
+  # Usage Plan
+  UsagePlan:
+    Type: 'AWS::ApiGateway::UsagePlan'
+    DependsOn: ApiDeployment  # Ensures the usage plan is created after the deployment
+    Properties:
+      UsagePlanName: 'MyUsagePlan'
+      ApiStages:
+        - ApiId: !Ref ApiGateway
+          Stage: 'prod'
+      Throttle:
+        BurstLimit: 100
+        RateLimit: 50
+      Quota:
+        Limit: 1000
+        Period: MONTH
+
+  # API Key
+  ApiKey:
+    Type: 'AWS::ApiGateway::ApiKey'
+    Properties:
+      Enabled: true
+      Name: 'APIExampleKey'
+
+  # Usage Plan Key
+  UsagePlanKey:
+    Type: 'AWS::ApiGateway::UsagePlanKey'
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: 'API_KEY'
+      UsagePlanId: !Ref UsagePlan
