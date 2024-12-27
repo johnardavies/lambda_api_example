@@ -1,3 +1,6 @@
+
+Description: A CloudFormation template that creates an API that runs a container. The API is rate limited API with an API key. 
+
 Parameters:
   ECRRepositoryUri:
     Type: String
