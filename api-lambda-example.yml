@@ -37,7 +37,7 @@ Resources:
       Timeout: 30
       MemorySize: 500
 
-    # Gives the API Gateway permission to call the lambda function ExampleAPIDependencies
+  # Gives the API Gateway permission to call the lambda function ExampleAPIDependencies
   LambdaApiGatewayPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
@@ -45,7 +45,7 @@ Resources:
       FunctionName: !Ref ExampleAPIDependencies
       Principal: 'apigateway.amazonaws.com'
 
-    # Lambda Execution Role
+  # Lambda Execution Role
   LambdaExecutionRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -69,7 +69,7 @@ Resources:
                 Resource: '*'
     
 
-   # API Method
+  # API Method
   ApiMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
