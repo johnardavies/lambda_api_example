@@ -1,4 +1,3 @@
-
 Description: A CloudFormation template that creates an API that runs a container. The API is rate limited API with an API key. 
 
 Parameters:
@@ -71,7 +70,6 @@ Resources:
                   - 'logs:PutLogEvents'
                 Resource: '*'
     
-
   # API Method
   ApiMethod:
     Type: 'AWS::ApiGateway::Method'
@@ -85,15 +83,14 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: 'POST'
         Uri: !Sub 'arn:aws:apigateway:eu-west-2:lambda:path/2015-03-31/functions/${ExampleAPIDependencies.Arn}/invocations'
-
-
+  
+  # API Deployment linked to a stage
   ApiDeployment:
     Type: 'AWS::ApiGateway::Deployment'
     DependsOn: ApiMethod  # Ensures the deployment happens after the method is created
     Properties:
       RestApiId: !Ref ApiGateway
-      StageName: 'prod'
-
+      StageName: !Sub '${StageName}'
 
   # Usage Plan
   UsagePlan:
@@ -103,7 +100,7 @@ Resources:
       UsagePlanName: 'MyUsagePlan'
       ApiStages:
         - ApiId: !Ref ApiGateway
-          Stage: 'prod'
+          Stage: !Sub '${StageName}'
       Throttle:
         BurstLimit: 100
         RateLimit: 50
