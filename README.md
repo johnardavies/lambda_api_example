@@ -4,3 +4,6 @@ This repo contains an example of how to build an API in AWS using a CloudFormati
 
 The API triggers a lambda function which runs a docker container.
 The Docker container is specified in the `container_folder` using the `Dockerfile`, `requirements.txt` and the `lambda_handler.py`.
+
+The deployment of this is discussed in the post below
+https://johnardavies.github.io//technical/api_lambda/
