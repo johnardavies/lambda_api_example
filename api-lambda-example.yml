@@ -25,7 +25,8 @@ Resources:
       ParentId: !GetAtt ApiGateway.RootResourceId
       PathPart: 'installer'
       RestApiId: !Ref ApiGateway
-
+      
+  # The Lambda function which is linked to the container image in the Elastic Container Registry
   ExampleAPIDependencies: 
     Type: "AWS::Lambda::Function"
     Properties:
