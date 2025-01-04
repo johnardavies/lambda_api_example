@@ -7,7 +7,7 @@ import json
 def handler(event, context):
     """Function that takes input string and imports numpy and pandas returning their versions as a json"""
     query_params = event.get("queryStringParameters", {})
-    input = query_params.get("input", "world")
+    input = query_params.get("input", "default_return")
 
     # Return the result as JSON
     return {

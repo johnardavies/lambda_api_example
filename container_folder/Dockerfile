@@ -8,11 +8,12 @@ ARG FUNCTION_DIR
 
 # Copy function code
 RUN mkdir -p ${FUNCTION_DIR}
-COPY . ${FUNCTION_DIR}
+COPY lambda_function.py ${FUNCTION_DIR}
 
+# Copy the requirements.txt
 COPY requirements.txt .
 
-# Install the function's dependencies
+# Install the dependencies in FUNCTION_DIR
 RUN pip install \
     --target ${FUNCTION_DIR} \
         -r requirements.txt
