@@ -25,7 +25,34 @@ Resources:
       ParentId: !GetAtt ApiGateway.RootResourceId
       PathPart: 'installer'
       RestApiId: !Ref ApiGateway
+
+  # Lambda Execution Role
+  LambdaExecutionRole:   
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'lambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
       
+      Policies:
+        - PolicyName: 'LambdaBasicExecution'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                - 'logs:CreateLogGroup'
+                Resource: '*' #!Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+              - Effect: 'Allow'
+                Action:  
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:log-stream:*"
+
   # The Lambda function which is linked to the container image in the Elastic Container Registry
   ExampleAPIDependencies: 
     Type: "AWS::Lambda::Function"
@@ -47,33 +74,7 @@ Resources:
       Action: 'lambda:InvokeFunction'
       FunctionName: !Ref ExampleAPIDependencies
       Principal: 'apigateway.amazonaws.com'
-
-  # Lambda Execution Role
-  LambdaExecutionRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              Service: 'lambda.amazonaws.com'
-            Action: 'sts:AssumeRole'
-
-      Policies:  
-        - PolicyName: 'LambdaBasicExecution'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: 'Allow'
-                Action:
-                 - 'logs:CreateLogGroup'
-                 - 'logs:CreateLogStream'
-                 - 'logs:PutLogEvents'
-                Resource:
-                 - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}*'
-                 - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}*:log-stream:*'
-     
+             
   # API Method
   ApiMethod:
     Type: 'AWS::ApiGateway::Method'
