@@ -39,14 +39,14 @@ Resources:
             Action: 'sts:AssumeRole'
       
       Policies:
-        - PolicyName: 'LambdaBasicExecution'
+        - PolicyName: 'LambdaLogWrite'
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: 'Allow'
                 Action:
                 - 'logs:CreateLogGroup'
-                Resource: '*' #!Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
               - Effect: 'Allow'
                 Action:  
                   - 'logs:CreateLogStream'
